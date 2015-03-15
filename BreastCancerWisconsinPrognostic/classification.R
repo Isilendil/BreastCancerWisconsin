@@ -1,12 +1,29 @@
-# 2015.03.13
+# 2015.03.14
 
-# classification of wdbc dataset
+# classification of wpbc dataset
 
 readData <- function()
 {
-  tempData <- read.table(file = 'wdbc.data', header = FALSE, sep = ',')
-  colnames(tempData)[1:2] <- c('id', 'class')
+  tempData <- read.table(file = 'wpbc.data', header = FALSE, sep = ',')
+  colnames(tempData)[1:3] <- c('id', 'outcome', 'time')
+  
+  # missing value process
+  # Missing attribute values: Lymph node status is missing in 4 cases.
+  # Lymph node status numbered V35 is a level attribute.
+  # hist(as.numeric(rawData[, 'V35]))
+  # The value of V35 in around half samples is 0.
+  tempData[tempData[, 'V35'] == '?', 'V35'] <- 0
+  tempData[, 'V35'] = as.numeric(as.character(tempData[, 'V35']))
+  
   return(tempData)
+}
+
+RecurPredictionPreprocessing <- function(data)
+{
+  # Positive case: Recurrence in five years
+  data[, 'label'] <- 0
+  data[(data[, 'outcome']=='R') & (data[, 'time']<=60), 'label'] <- 1
+  return(data)
 }
 
 LRClassification <- function(trainData, testData)
@@ -86,18 +103,21 @@ SVMClassification <- function(trainData, testData)
 ###
 
 rawData <- readData()
-rawData[rawData[,'class'] == 'M', 'label'] <- 1
-rawData[rawData[,'class'] == 'B', 'label'] <- 0
+
+# Recurrence Prediction PreProcessing
+data <- RecurPredictionPreprocessing(rawData)
+
+cutPoint <- 150
 
 # Logistic Regression Algorithm
-#LRClassification(trainData = rawData[1:400, 3:ncol(rawData)], testData = rawData[401:569, 3:ncol(rawData)])
+LRClassification(trainData = data[1:cutPoint, 4:ncol(data)], testData = data[(cutPoint+1):(nrow(data)), 4:ncol(data)])
 
 # Decision Tree Algorithm
 #DTClassification(trainData = rawData, testData = rawData)
-#DTClassification(trainData = rawData[1:400, 3:ncol(rawData)], testData = rawData[401:569, 3:ncol(rawData)])
+DTClassification(trainData = data[1:cutPoint, 4:ncol(data)], testData = data[(cutPoint+1):(nrow(data)), 4:ncol(data)])
 
 # Support Vector Machine Algorithm
-SVMClassification(trainData = rawData[101:500, 3:ncol(rawData)], testData = rawData[501:569, 3:ncol(rawData)])
+#SVMClassification(trainData = data[1:100, 4:ncol(data)], testData = data[101:198, 4:ncol(data)])
 
 
 
