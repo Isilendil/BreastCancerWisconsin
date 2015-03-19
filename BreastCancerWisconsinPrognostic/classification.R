@@ -10,7 +10,7 @@ readData <- function()
   # missing value process
   # Missing attribute values: Lymph node status is missing in 4 cases.
   # Lymph node status numbered V35 is a level attribute.
-  # hist(as.numeric(rawData[, 'V35]))
+  # hist(as.numeric(tempData[, 'V35']))
   # The value of V35 in around half samples is 0.
   tempData[tempData[, 'V35'] == '?', 'V35'] <- 0
   tempData[, 'V35'] = as.numeric(as.character(tempData[, 'V35']))
@@ -63,6 +63,21 @@ DTClassification <- function(trainData, testData)
   print(mean(testData[, 'label'] == prediction))
 }
 
+NBClassification <- function(trainData, testData)
+{
+  library(e1071)
+  
+  trainData$label <- as.factor(trainData$label)
+  testData$label <- as.factor(testData$label)
+  
+  model <- naiveBayes(label ~ ., data = trainData, laplace = 3)
+  prediction <- predict(model, newdata = testData)
+  print(mean(testData[, 'label'] == prediction))
+  table(prediction, testData$label)
+}
+
+SVMClassification <- function(trainData, testData)
+
 SVMClassification <- function(trainData, testData)
 {
   library(e1071)
@@ -102,22 +117,40 @@ SVMClassification <- function(trainData, testData)
 # main function
 ###
 
+setwd('~/Workspace/R/BreastCancerWisconsin/BreastCancerWisconsinPrognostic//')
+
 rawData <- readData()
 
 # Recurrence Prediction PreProcessing
 data <- RecurPredictionPreprocessing(rawData)
 
-cutPoint <- 150
+cutPoint <- 170
+
+trainNumber <- 150
+
+set.seed(0)
+trainRow <- sample(nrow(data), trainNumber)
+
+train <- data[trainRow, 4:ncol(data)]
+test <- data[-trainRow, 4:ncol(data)]
 
 # Logistic Regression Algorithm
-LRClassification(trainData = data[1:cutPoint, 4:ncol(data)], testData = data[(cutPoint+1):(nrow(data)), 4:ncol(data)])
+#LRClassification(trainData = data[1:cutPoint, 4:ncol(data)], testData = data[(cutPoint+1):(nrow(data)), 4:ncol(data)])
+#LRClassification(trainData = data[1:cutPoint, 4:ncol(data)], testData = data[(cutPoint+1):(nrow(data)), 4:ncol(data)])
+LRClassification(trainData = train, testData = test)
 
 # Decision Tree Algorithm
 #DTClassification(trainData = rawData, testData = rawData)
-DTClassification(trainData = data[1:cutPoint, 4:ncol(data)], testData = data[(cutPoint+1):(nrow(data)), 4:ncol(data)])
+#DTClassification(trainData = data[1:cutPoint, 4:ncol(data)], testData = data[(cutPoint+1):(nrow(data)), 4:ncol(data)])
+DTClassification(trainData = train, testData = test)
+
+# Naive Bayes Algorithm
+#NBClassification(trainData = data[, 4:ncol(data)], testData = data[, 4:ncol(data)])
+NBClassification(trainData = train, testData = test)
+#NBClassification(trainData = data[1:cutPoint, 4:ncol(data)], testData = data[(cutPoint+1):(nrow(data)), 4:ncol(data)])
 
 # Support Vector Machine Algorithm
-#SVMClassification(trainData = data[1:100, 4:ncol(data)], testData = data[101:198, 4:ncol(data)])
+SVMClassification(trainData = train, testData = test)
 
 
 

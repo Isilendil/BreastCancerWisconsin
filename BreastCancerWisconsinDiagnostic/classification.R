@@ -46,6 +46,19 @@ DTClassification <- function(trainData, testData)
   print(mean(testData[, 'label'] == prediction))
 }
 
+NBClassification <- function(trainData, testData)
+{
+  library(e1071)
+  
+  trainData$label <- as.factor(trainData$label)
+  testData$label <- as.factor(testData$label)
+  
+  model <- naiveBayes(label ~ ., data = trainData)
+  prediction <- predict(model, newdata = testData)
+  print(mean(testData[, 'label'] == prediction))
+  table(prediction, testData$label)
+}
+
 SVMClassification <- function(trainData, testData)
 {
   library(e1071)
@@ -85,20 +98,44 @@ SVMClassification <- function(trainData, testData)
 # main function
 ###
 
+setwd('~/Workspace/R/BreastCancerWisconsin/BreastCancerWisconsinDiagnostic/')
+
 rawData <- readData()
 rawData[rawData[,'class'] == 'M', 'label'] <- 1
 rawData[rawData[,'class'] == 'B', 'label'] <- 0
 
+data <- rawData
+
+trainNumber <- 150
+
+set.seed(0)
+trainRow <- sample(nrow(data), trainNumber)
+
+train <- data[trainRow, 3:ncol(data)]
+test <- data[-trainRow, 3:ncol(data)]
+
+
 # Logistic Regression Algorithm
 #LRClassification(trainData = rawData[1:400, 3:ncol(rawData)], testData = rawData[401:569, 3:ncol(rawData)])
+LRClassification(trainData = train, testData = test)
 
 # Decision Tree Algorithm
 #DTClassification(trainData = rawData, testData = rawData)
 #DTClassification(trainData = rawData[1:400, 3:ncol(rawData)], testData = rawData[401:569, 3:ncol(rawData)])
+DTClassification(trainData = train, testData = test)
+
+# Naive Bayes Algorithm
+#NBClassification(trainData = rawData[1:400, 3:ncol(rawData)], testData = rawData[401:569, 3:ncol(rawData)])
+NBClassification(trainData = train, testData = test)
 
 # Support Vector Machine Algorithm
-SVMClassification(trainData = rawData[101:500, 3:ncol(rawData)], testData = rawData[501:569, 3:ncol(rawData)])
+#SVMClassification(trainData = rawData[101:500, 3:ncol(rawData)], testData = rawData[501:569, 3:ncol(rawData)])
+SVMClassification(trainData = train, testData = test)
 
+
+###
+# semi-supervised learning
+###
 
 
 
